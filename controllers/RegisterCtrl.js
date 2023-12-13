@@ -3,6 +3,7 @@ import SessionRegistration from "../models/SessionRegistrationModel.js"
 import asyncHandler from 'express-async-handler'
 import nodemailer from 'nodemailer'
 import Mailgen from "mailgen"
+import AttendanceReg from "../models/AttendaceRegister.js"
 
 export const registration =asyncHandler(async (req,res)=>{
     const {registerid,EventReg} = req.body
@@ -10,7 +11,7 @@ export const registration =asyncHandler(async (req,res)=>{
         if(!findRegisterd)
         {
             const newRegistration =await SessionRegistration.create(req.body)
-            sendEmailReg(req.body)
+            // sendEmailReg(req.body)
             res.json(newRegistration)
         }
         else
@@ -19,6 +20,53 @@ export const registration =asyncHandler(async (req,res)=>{
         }
 })
 
+export const attendaceRegister = asyncHandler(async(req,res)=>{
+  const {EventName} = req.body
+  const findFromAttendance = await AttendanceReg.findOne({
+    'Attended': {
+      $elemMatch: { 'EventReg': EventName }
+    }
+  });
+  if(findFromAttendance === null)
+  {
+    try {
+      const findRegisterd = await SessionRegistration.find({EventReg:EventName})
+      if(findRegisterd)
+      {
+        res.json({findRegisterd})
+      }   
+      else{
+        res.json({status:404,message:"Not Found"})
+      }
+    } catch (error) {
+        res.json({status:500,message:error})
+    }
+  }
+  else{
+    res.json({status:306,message:"Attendance Submitted"})
+  }
+})
+
+export const attendanceSave = asyncHandler(async(req,res)=>{
+  const AttendanceData = req.body
+  try {
+    const filterArray = ['registerid', 'registername', 'EventReg', 'present', 'absent'];
+    const removalData = AttendanceData.map(obj => {
+      const filteredObj = Object.fromEntries(
+        Object.entries(obj).filter(([key]) => filterArray.includes(key))
+      );
+      return filteredObj;
+    });
+    
+    const attendanceResponse = await AttendanceReg.create({
+      Attended:removalData,
+      EventReg:removalData[0]?.EventReg
+    })
+    res.json({attendanceResponse,status:200})
+  } catch (error) {
+    res.json({status:500,message:error})
+  }
+})
 
 export const contactfun = asyncHandler(async(req,res)=>{
     console.log(req.body);
@@ -34,6 +82,8 @@ export const contactfun = asyncHandler(async(req,res)=>{
                     success:false})
     }
 })
+
+// export const updateRegister = 
 
 
 export const sendEmail = (data)=> {

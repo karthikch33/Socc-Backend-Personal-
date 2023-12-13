@@ -24,6 +24,12 @@ const registerSchema = new mongoose.Schema({
     },
     EventReg:{
         type:String
+    },
+    present:{
+        type:String
+    },
+    absent:{
+        type:String
     }
 },{timestamps:true});
 
