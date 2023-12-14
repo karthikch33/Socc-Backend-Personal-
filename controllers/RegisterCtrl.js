@@ -27,6 +27,7 @@ export const attendaceRegister = asyncHandler(async(req,res)=>{
       $elemMatch: { 'EventReg': EventName }
     }
   });
+  // console.log(findFromAttendance);
   if(findFromAttendance === null)
   {
     try {
@@ -43,7 +44,7 @@ export const attendaceRegister = asyncHandler(async(req,res)=>{
     }
   }
   else{
-    res.json({status:306,message:"Attendance Submitted"})
+    res.json({status:306,message:"Attendance Submitted",findFromAttendance})
   }
 })
 
