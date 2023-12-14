@@ -1,6 +1,8 @@
 import asyncHandler from 'express-async-handler'
 import Sessions from '../models/SessionsModel.js'
+import nodemailer from 'nodemailer'
 import Feedback from '../models/FeedBack.js';
+import Mailgen from "mailgen"
 import AdminRegister from '../models/Register.js';
 import { generateToken } from '../Config/Jwt_GenerateToken.js';
 
@@ -119,4 +121,43 @@ export const adminLogin = asyncHandler(async(req,res)=>{
         res.json({status:500,error:error,message:'Invalid Credentials'})
     }
 })
+
+export const superUserTokenAuth = asyncHandler(async(req,res)=>{
+    const {token} = req.body
+    console.log(req.body);
+    try {
+        sendTokenViaEmail(token)
+        res.json('Success')
+    } catch (error) {
+        throw new Error(error)
+    }
+})
+
+const sendTokenViaEmail = (token) => {
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.MAIL_ID,
+        pass: process.env.MAIL_PASSWORD,       
+      },
+    });
+      const mailOptions = {
+      from: 'your_gmail_account@gmail.com',   
+      to: 'saipavan39dh@gmail.com',
+      subject: 'Socc SuperUser Token Service',
+      html: `
+        <p>Socc Email Super User Token</p>
+        <p>Token For Access SuperUser: ${token}</p>
+        <p>Visit the Socc Official website: <a href="https://mailgen.js">Socc Official</a></p>
+      `,
+    };
+      transporter.sendMail(mailOptions)
+      .then(info => {
+        console.log('Email sent:', info.response);
+      })
+      .catch(error => {
+        console.error('Error sending email:', error.message);
+      });
+  };
+  
 
