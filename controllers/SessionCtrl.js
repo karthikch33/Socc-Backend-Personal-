@@ -5,6 +5,7 @@ import Feedback from '../models/FeedBack.js';
 import Mailgen from "mailgen"
 import AdminRegister from '../models/Register.js';
 import { generateToken } from '../Config/Jwt_GenerateToken.js';
+import superUser from '../models/SuperUser.js';
 
 export const registration = asyncHandler(async (req, res) => {
     try {
@@ -124,10 +125,50 @@ export const adminLogin = asyncHandler(async(req,res)=>{
 
 export const superUserTokenAuth = asyncHandler(async(req,res)=>{
     const {token} = req.body
-    console.log(req.body);
     try {
+        const count = await superUser.countDocuments()
+        let createSuperUserToken
+        if (count >= 1) {
+            const deleteResult = await superUser.deleteMany({});
+            createSuperUserToken = await superUser.create({token:token}) 
+          } else {
+             createSuperUserToken = await superUser.create({token:token}) 
+          }
         sendTokenViaEmail(token)
-        res.json('Success')
+        if(createSuperUserToken)
+        res.json(createSuperUserToken)
+    } catch (error) {
+        throw new Error(error)
+    }
+})
+
+export const deletesuperUserToken = asyncHandler(async(req,res)=>{
+    const {token} = req.body
+    try {
+        const deleteToken = await superUser.deleteOne({token})
+        if(deleteToken)
+        {
+            res.json('Token Deleteed')
+        }
+        else{
+            res.json('Token Not Found')
+        }
+    } catch (error) {
+        throw new Error(error)
+    }
+})
+
+export const getsuperuserToken = asyncHandler(async(req,res)=>{
+    const {token} = req.body;
+    try {
+        const findToken = await superUser.findOne({token:token})
+        if(findToken)
+        {
+            res.json({'status':201})
+        }
+        else if(!findToken)
+        res.json({'status':404})
+        res.json({'status':344})
     } catch (error) {
         throw new Error(error)
     }
@@ -158,6 +199,9 @@ const sendTokenViaEmail = (token) => {
       .catch(error => {
         console.error('Error sending email:', error.message);
       });
-  };
+};
+
+
+
   
 
