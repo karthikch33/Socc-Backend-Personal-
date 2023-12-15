@@ -13,12 +13,20 @@ const ContactSchema = new mongoose.Schema({
     message:{
         type:String
     },
+    uniqueCode:{
+        type:String,
+    },
     resolvedMessage:{
-        type:String
+        type:String,
+        default:''
     },
     resolved:{
         type:Boolean,
         default:false
+    },
+    resolvedBy:{
+        type:String,
+        default:''
     }
 })
 

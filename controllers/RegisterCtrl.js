@@ -2,6 +2,7 @@ import contact from "../models/ContactAuth.js"
 import SessionRegistration from "../models/SessionRegistrationModel.js"
 import asyncHandler from 'express-async-handler'
 import nodemailer from 'nodemailer'
+import {sha256} from 'crypto-hash';
 import Mailgen from "mailgen"
 import AttendanceReg from "../models/AttendaceRegister.js"
 
@@ -70,8 +71,14 @@ export const attendanceSave = asyncHandler(async(req,res)=>{
 })
 
 export const contactfun = asyncHandler(async(req,res)=>{
-    console.log(req.body);
-    const feedbackSave = await contact.create(req.body)
+    const {message} = req.body;
+    const uniqCode = await sha256(message)
+    const mssgCode = {
+      ...req.body,
+      uniqueCode:uniqCode
+    }
+    const feedbackSave = await contact.create(mssgCode)
+
     if(feedbackSave)
     {
         sendEmail(req.body)
@@ -94,6 +101,28 @@ export const getCompliants = asyncHandler(async(req,res)=>{
   }
 })
 
+export const resolvedContactMssg = asyncHandler(async(req,res)=>{
+  const {uniqueCode,resolvedMessage,resolvedBy} = req.body
+  console.log(req.body);
+  try {
+    const updateContactResolved =await contact.findOne({uniqueCode})
+    if(updateContactResolved)
+    {
+      const updateContact = await contact.findOneAndUpdate({uniqueCode},{
+        resolved:true,
+        resolvedMessage:resolvedMessage,
+        resolvedBy:resolvedBy
+      },{new:true})
+      sendEmailContactResolve(updateContact)
+      res.json(updateContact)
+    }
+    else{
+      res.json({status:404,message:'Message Not Found'})
+    }
+  } catch (error) {
+    throw new Error(error)
+  }
+})
 
 export const sendEmail = (data)=> {
     let config = {
@@ -122,6 +151,58 @@ export const sendEmail = (data)=> {
             <br/>
             <br/>
         Message We Received : ${data?.message}
+        `,
+      },    
+    };
+  
+    let mail = MailGenerator.generate(response);
+  
+    let message = {
+      from: process.env.MAIL_ID,
+      to: data?.email,
+      subject: 'Socc Team Contact', 
+      html: mail,
+    };
+  
+    transporter.sendMail(message)
+      .then(() => {
+       console.log('You Should Recieve An Email');
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
+
+export const sendEmailContactResolve = (data)=> {
+    let config = {
+      service: 'gmail',
+      auth: {
+        user: process.env.MAIL_ID,
+        pass: process.env.MAIL_PASSWORD, 
+      },
+    };
+  
+    let transporter = nodemailer.createTransport(config);
+  
+    let MailGenerator = new Mailgen({
+      theme: 'default',
+      product: {
+        name: 'Socc Official',
+        link: 'https://mailgen.js',
+      },
+    });
+  
+    let response = {
+      body: {
+        name: data?.name,
+        intro: 'Socc Team Contact',
+        outro: ` We Have a Resolution Mssg for Your Message 
+            <br/>
+            <br/>
+        Message We Received : ${data?.message}
+            <br/>
+            <br/>
+        Resolution Message  : ${data?.resolvedMessage}
         `,
       },    
     };
