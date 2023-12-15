@@ -12,8 +12,9 @@ const AttendanceReg = new mongoose.Schema({
             registername:{
                 type:String
             },
-            present:{
-                type:Boolean
+            absent:{
+                type:Boolean,
+                default:false
             }
         }
     ],
