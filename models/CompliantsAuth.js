@@ -13,12 +13,11 @@ const ContactSchema = new mongoose.Schema({
     message:{
         type:String
     },
-    resolvedMessage:{
+    resolvedmessage:{
         type:String
     },
     resolved:{
-        type:Boolean,
-        default:false
+        type:Boolean
     }
 })
 

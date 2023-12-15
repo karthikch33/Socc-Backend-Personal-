@@ -84,7 +84,15 @@ export const contactfun = asyncHandler(async(req,res)=>{
     }
 })
 
-// export const updateRegister = 
+export const getCompliants = asyncHandler(async(req,res)=>{
+  try {
+    const allCompliants = await contact.find()  //{resolved:false}
+    if(allCompliants)
+    res.json(allCompliants)
+  } catch (error) {
+    throw new Error(error)
+  }
+})
 
 
 export const sendEmail = (data)=> {

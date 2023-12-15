@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { attendaceRegister, attendanceSave, contactfun, registration, sendEmail } from "../controllers/RegisterCtrl.js";
+import { attendaceRegister, attendanceSave, contactfun, getCompliants, registration, sendEmail } from "../controllers/RegisterCtrl.js";
 import { feedbackRating } from "../controllers/SessionCtrl.js";
 
 
@@ -11,6 +11,7 @@ router.route('/sendEmail').post(sendEmail)
 router.route('/feedback').post(feedbackRating)
 router.route('/attendance').post(attendaceRegister)
 router.route('/attendancesave').post(attendanceSave)
+router.route('/getContacts').get(getCompliants)
 
 
 
