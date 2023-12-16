@@ -6,52 +6,54 @@ import {sha256} from 'crypto-hash';
 import Mailgen from "mailgen"
 import AttendanceReg from "../models/AttendaceRegister.js"
 
-export const registration =asyncHandler(async (req,res)=>{
-    const {registerid,EventReg} = req.body
-        const findRegisterd =await SessionRegistration.findOne({registerid:registerid,EventReg:EventReg})
-        if(!findRegisterd)
-        {
-            const newRegistration =await SessionRegistration.create(req.body)
-            // sendEmailReg(req.body)
-            res.json(newRegistration)
-        }
-        else
-        {
-            throw new Error('Registration Completed For this Id')
-        }
-})
-
-export const attendaceRegister = asyncHandler(async(req,res)=>{
-  const {EventName} = req.body
-  const findFromAttendance = await AttendanceReg.findOne({
-    'Attended': {
-      $elemMatch: { 'EventReg': EventName }
-    }
-  });
-  // console.log(findFromAttendance);
-  if(findFromAttendance === null)
-  {
-    try {
-      const findRegisterd = await SessionRegistration.find({EventReg:EventName})
-      if(findRegisterd)
-      {
-        res.json({findRegisterd})
-      }   
-      else{
-        res.json({status:404,message:"Not Found"})
-      }
-    } catch (error) {
-        res.json({status:500,message:error})
-    }
-  }
-  else{
-    res.json({status:306,message:"Attendance Submitted",findFromAttendance})
-  }
-})
-
-export const attendanceSave = asyncHandler(async(req,res)=>{
-  const AttendanceData = req.body
+export const registration = asyncHandler(async (req, res) => {
   try {
+    const { registerid, EventReg } = req.body;
+    const findRegisterd = await SessionRegistration.findOne({ registerid, EventReg });
+
+    if (!findRegisterd) {
+      const newRegistration = await SessionRegistration.create(req.body);
+      // sendEmailReg(req.body)
+      res.json(newRegistration);
+    } else {
+      throw new Error('Registration Completed For this Id');
+    }
+  } catch (error) {
+    res.status(500).json({ status: 500, message: error.message });
+  }
+});
+
+
+export const attendaceRegister = asyncHandler(async (req, res) => {
+  try {
+    const { EventName } = req.body;
+    const findFromAttendance = await AttendanceReg.findOne({
+      'Attended': {
+        $elemMatch: { 'EventReg': EventName }
+      }
+    });
+
+    if (findFromAttendance === null) {
+      const findRegisterd = await SessionRegistration.find({ EventReg: EventName });
+
+      if (findRegisterd.length > 0) {
+        res.json({ findRegisterd });
+      } else {
+        res.status(404).json({ status: 404, message: "Not Found" });
+      }
+    } else {
+      res.json({ status: 306, message: "Attendance Submitted", findFromAttendance });
+    }
+  } catch (error) {
+    res.status(500).json({ status: 500, message: error.message });
+  }
+});
+
+
+export const attendanceSave = asyncHandler(async (req, res) => {
+  try {
+    const AttendanceData = req.body;
+
     const filterArray = ['registerid', 'registername', 'EventReg', 'present', 'absent'];
     const removalData = AttendanceData.map(obj => {
       const filteredObj = Object.fromEntries(
@@ -59,70 +61,83 @@ export const attendanceSave = asyncHandler(async(req,res)=>{
       );
       return filteredObj;
     });
-    
-    const attendanceResponse = await AttendanceReg.create({
-      Attended:removalData,
-      EventReg:removalData[0]?.EventReg
-    })
-    res.json({attendanceResponse,status:200})
-  } catch (error) {
-    res.json({status:500,message:error})
-  }
-})
 
-export const contactfun = asyncHandler(async(req,res)=>{
-    const {message} = req.body;
-    const uniqCode = await sha256(message)
+    const attendanceResponse = await AttendanceReg.create({
+      Attended: removalData,
+      EventReg: removalData[0]?.EventReg
+    });
+
+    res.json({ attendanceResponse, status: 200 });
+  } catch (error) {
+    res.status(500).json({ status: 500, message: error.message });
+  }
+});
+
+
+export const contactfun = asyncHandler(async (req, res) => {
+  try {
+    const { message } = req.body;
+    const uniqCode = await sha256(message);
     const mssgCode = {
       ...req.body,
-      uniqueCode:uniqCode
-    }
-    const feedbackSave = await contact.create(mssgCode)
+      uniqueCode: uniqCode
+    };
 
-    if(feedbackSave)
-    {
-        sendEmail(req.body)
-        res.json({message:'FeedBack Submmitted',
-                     success:true})
-    }
-    else{
-        res.json({message:'FeedBack Failed',
-                    success:false})
-    }
-})
+    const feedbackSave = await contact.create(mssgCode);
 
-export const getCompliants = asyncHandler(async(req,res)=>{
-  try {
-    const allCompliants = await contact.find()  //{resolved:false}
-    if(allCompliants)
-    res.json(allCompliants)
-  } catch (error) {
-    throw new Error(error)
-  }
-})
-
-export const resolvedContactMssg = asyncHandler(async(req,res)=>{
-  const {uniqueCode,resolvedMessage,resolvedBy} = req.body
-  console.log(req.body);
-  try {
-    const updateContactResolved =await contact.findOne({uniqueCode})
-    if(updateContactResolved)
-    {
-      const updateContact = await contact.findOneAndUpdate({uniqueCode},{
-        resolved:true,
-        resolvedMessage:resolvedMessage,
-        resolvedBy:resolvedBy
-      },{new:true})
-      sendEmailContactResolve(updateContact)
-      res.json(updateContact)
-    }
-    else{
-      res.json({status:404,message:'Message Not Found'})
+    if (feedbackSave) {
+      sendEmail(req.body);
+      res.json({ message: 'FeedBack Submitted', success: true });
+    } else {
+      res.status(500).json({ message: 'FeedBack Failed', success: false });
     }
   } catch (error) {
-    throw new Error(error)
+    res.status(500).json({ status: 500, message: error.message });
   }
-})
+});
+
+
+export const getCompliants = asyncHandler(async (req, res) => {
+  try {
+    const allCompliants = await contact.find({ resolved: false });  
+
+    if (allCompliants) {
+      res.json(allCompliants);
+    } else {
+      res.status(404).json({ status: 404, message: 'Complaints not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ status: 500, message: error.message });
+  }
+});
+
+
+export const resolvedContactMssg = asyncHandler(async (req, res) => {
+  try {
+    const { uniqueCode, resolvedMessage, resolvedBy } = req.body;
+    const updateContactResolved = await contact.findOne({ uniqueCode });
+
+    if (updateContactResolved) {
+      const updateContact = await contact.findOneAndUpdate(
+        { uniqueCode },
+        {
+          resolved: true,
+          resolvedMessage: resolvedMessage,
+          resolvedBy: resolvedBy,
+        },
+        { new: true }
+      );
+
+      sendEmailContactResolve(updateContact);
+      res.json(updateContact);
+    } else {
+      res.status(404).json({ status: 404, message: 'Message Not Found' });
+    }
+  } catch (error) {
+    res.status(500).json({ status: 500, message: error.message });
+  }
+});
+
 
 export const sendEmail = (data)=> {
     let config = {
