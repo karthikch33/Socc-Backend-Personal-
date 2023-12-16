@@ -111,6 +111,21 @@ export const getCompliants = asyncHandler(async (req, res) => {
   }
 });
 
+export const getCompliantsResolved = asyncHandler(async (req, res) => {
+  try {
+    const allCompliants = await contact.find({ resolved: true });  
+
+    if (allCompliants) {
+      res.json(allCompliants);
+    } else {
+      res.status(404).json({ status: 404, message: 'Complaints not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ status: 500, message: error.message });
+  }
+});
+
+
 
 export const resolvedContactMssg = asyncHandler(async (req, res) => {
   try {
