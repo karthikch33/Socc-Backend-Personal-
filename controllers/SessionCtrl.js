@@ -71,13 +71,16 @@ export const uploads = async(filesData)=>{
   }
 
 export const adminRegister = asyncHandler(async (req,res)=>{
-    const {username,email,phone} = req.body
+    const {username,email,phone,password} = req.body
     try {
-        const findEmail = await AdminRegister.findOne({email})
+        const encodedemail = encodeURIComponent(email);
+        const encodedusername = encodeURIComponent(username);
+        const encodedephone = encodeURIComponent(phone);
+        const findEmail = await AdminRegister.findOne({encodedemail})
         if(findEmail) res.json({status:409,message:"Email Already Taken"})
-        const findPhone = await AdminRegister.findOne({phone})
+        const findPhone = await AdminRegister.findOne({encodedephone})
         if(findPhone) res.json({status:409,message:"Phone Number Already Taken"})
-        const findUsername = await AdminRegister.findOne({username})
+        const findUsername = await AdminRegister.findOne({encodedusername})
         if(findUsername) res.json({status:409,message:'Username Already Taken'})
 
         const createAdminUser = await AdminRegister.create(req.body)
@@ -88,37 +91,45 @@ export const adminRegister = asyncHandler(async (req,res)=>{
     }
 })
 
-export const adminLogin = asyncHandler(async(req,res)=>{
+export const adminLogin = asyncHandler(async (req, res) => {
     console.log(req.body);
-    const {username,password} = req.body
+    let { username, password } = req.body; // Use let to allow reassignment
     try {
-        const adminLogin = await AdminRegister.findOne({username})
+        // Decode the username and password if they were encoded before sending
+        username = decodeURIComponent(username);
+        password = decodeURIComponent(password);
+
+        const adminLogin = await AdminRegister.findOne({ username });
         console.log(adminLogin);
-        if(!adminLogin) res.json({status:305,message:"Admin User Not Found"})
-        if(adminLogin && await adminLogin.isPasswordMatched(password))
-        {
-            const refreshToken =await generateToken(adminLogin?._id)
-            const updateAdminUser =await AdminRegister.findByIdAndUpdate(adminLogin?._id,{
-                refreshedToken:refreshToken
-            },{new:true}) 
-            res.json({
-                _id:adminLogin?._id,
-                firstname:adminLogin?.firstname,
-                lastname:adminLogin?.lastname,
-                email:adminLogin?.email,
-                username:adminLogin?.username,
-                phone:adminLogin?.phone,
-                refreshedToken:updateAdminUser?.refreshedToken,
-                status:201
-            })
+
+        if (!adminLogin) {
+            res.json({ status: 305, message: "Admin User Not Found" });
         }
-        else{
-            res.json({status:404,message:"Password Not Matched"})
+
+        if (adminLogin && await adminLogin.isPasswordMatched(password)) {
+            const refreshToken = await generateToken(adminLogin?._id);
+            const updateAdminUser = await AdminRegister.findByIdAndUpdate(adminLogin?._id, {
+                refreshedToken: refreshToken
+            }, { new: true });
+
+            res.json({
+                _id: adminLogin?._id,
+                firstname: adminLogin?.firstname,
+                lastname: adminLogin?.lastname,
+                email: adminLogin?.email,
+                username: adminLogin?.username,
+                phone: adminLogin?.phone,
+                refreshedToken: updateAdminUser?.refreshedToken,
+                status: 201
+            });
+        } else {
+            res.json({ status: 404, message: "Password Not Matched" });
         }
     } catch (error) {
-        res.json({status:500,error:error,message:'Invalid Credentials'})
+        res.json({ status: 500, error: error, message: 'Invalid Credentials' });
     }
-})
+});
+
 
 export const superUserTokenAuth = asyncHandler(async(req,res)=>{
     const {token} = req.body
