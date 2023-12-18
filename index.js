@@ -37,7 +37,6 @@ DBconnect()
     console.log('Database Connection Successfull');
     app.listen(PORT,()=>{
         if(PORT === 4036) { 
-            localStorage.setItem('server', JSON.stringify({ 'server': 'ON' }));
             console.log(`Server Started on ${PORT}`);
         } 
         else{
