@@ -111,6 +111,15 @@ export const getCompliants = asyncHandler(async (req, res) => {
   }
 });
 
+export const serveronoroff = asyncHandler(async(req,res)=>{
+  try {
+    console.log('hi');
+    res.json({status:201,message:'serverOn'})
+  } catch (error) {
+    res.json({status:404,message:'serverOff'})
+  }
+})
+
 export const getCompliantsResolved = asyncHandler(async (req, res) => {
   try {
     const allCompliants = await contact.find({ resolved: true });  
