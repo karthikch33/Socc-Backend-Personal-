@@ -71,7 +71,7 @@ export const uploads = async(filesData)=>{
   }
 
 export const adminRegister = asyncHandler(async (req,res)=>{
-    const {username,email,phone,password} = req.body
+    const {username,email,phone} = req.body
     try {
         const encodedemail = encodeURIComponent(email);
         const encodedusername = encodeURIComponent(username);
@@ -96,8 +96,8 @@ export const adminLogin = asyncHandler(async (req, res) => {
     let { username, password } = req.body; // Use let to allow reassignment
     try {
         // Decode the username and password if they were encoded before sending
-        username = decodeURIComponent(username);
-        password = decodeURIComponent(password);
+        // username = decodeURIComponent(username);
+        // password = decodeURIComponent(password);
 
         const adminLogin = await AdminRegister.findOne({ username });
         console.log(adminLogin);
