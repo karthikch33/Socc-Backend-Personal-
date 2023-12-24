@@ -5,6 +5,7 @@ import nodemailer from 'nodemailer'
 import {sha256} from 'crypto-hash';
 import Mailgen from "mailgen"
 import AttendanceReg from "../models/AttendaceRegister.js"
+import Sessions from "../models/SessionsModel.js";
 
 export const registration = asyncHandler(async (req, res) => {
   try {
@@ -23,6 +24,16 @@ export const registration = asyncHandler(async (req, res) => {
   }
 });
 
+
+export const getAllRegister = asyncHandler(async(req,res)=>{
+  const {sessiontitle} = req.body
+  try {
+    const registerData = await Sessions.find({sessiontitle:sessiontitle})
+    res.json(registerData)
+  } catch (error) {
+    throw new Error(error)
+  }
+})
 
 export const attendaceRegister = asyncHandler(async (req, res) => {
   try {
