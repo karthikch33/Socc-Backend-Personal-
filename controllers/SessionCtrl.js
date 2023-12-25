@@ -6,6 +6,7 @@ import Mailgen from "mailgen"
 import AdminRegister from '../models/Register.js';
 import { generateToken } from '../Config/Jwt_GenerateToken.js';
 import superUser from '../models/SuperUser.js';
+import crypto from 'crypto'
 
 export const registration = asyncHandler(async (req, res) => {
     try {
@@ -166,6 +167,70 @@ export const deletesuperUserToken = asyncHandler(async(req,res)=>{
     }
 })
 
+export const resetpassword = asyncHandler(async(req,res)=>{
+    const {password} = req.body
+    const {token} = req.params
+    try {
+    const hashedToken = crypto.createHash('sha256').update(token).digest("hex")
+    const user = await AdminRegister.findOne({
+        passwordResetToken:hashedToken.toString(),
+        passwordResetExpires:{$gt:Date.now()}
+    })
+    if(!user) res.json({status:500,message:'Token Expired, Please try again later'})  
+    user.password = password;
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+    await user.save()
+    res.json(user)
+    } catch (error) {
+        throw new Error(error)
+    }
+})
+
+export const forgotpassword = asyncHandler(async(req,res)=>{
+    const {email,token} = req.body;
+    try {
+        const mailFound = await AdminRegister.findOne({email})
+        if(!mailFound) res.json({status:404,message:"User Not Found"})
+        if(mailFound)
+        {
+            const ResetToken = await mailFound.createPasswordResetToken(token)
+            await mailFound.save()
+            sendPasswordResetToken({
+                email:email,
+                uniqcode:token,
+            })
+            res.json({status:201,message:"User Found",uniqToken:ResetToken})
+        }   
+    } catch (error) {
+        throw new Error(error)
+    }
+})
+
+export const forgotpasswordverify = asyncHandler(async(req,res)=>{
+    const {uniqToken} = req.params;
+    const {token} = req.body
+    const hashedToken = crypto.createHash('sha256').update(uniqToken).digest("hex")
+    try {
+        const mailFound = await AdminRegister.findOne({ passwordResetToken:hashedToken.toString()})
+        if(!mailFound) res.json({status:404,message:"User Not Found"})
+        console.log(mailFound?.oneTimeOTP);
+        console.log(token);
+        if(mailFound && typeof token === 'number' && parseInt(mailFound?.oneTimeOTP) === token)  
+        {   
+            const removeOTP = await AdminRegister.findOneAndUpdate({passwordResetToken:hashedToken.toString()},{
+                oneTimeOTP:null
+            },{new:true})    
+            res.json({status:201,message:"OTP Verification Successfull"})
+        }
+        else{
+            res.json({status:500,message:"OTP Verification Unsuccessfull"})
+        }
+    } catch (error) {
+        throw new Error(error)
+    }
+})
+
 export const getsuperuserToken = asyncHandler(async(req,res)=>{
     const {token} = req.body;
     try {
@@ -209,7 +274,31 @@ const sendTokenViaEmail = (token) => {
       });
 };
 
+const sendPasswordResetToken = (data) => {
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.MAIL_ID,
+        pass: process.env.MAIL_PASSWORD,       
+      },
+    });
+      const mailOptions = {
+      from: 'SoccOfficialMail@gmail.com',   
+      to: data?.email,
+      subject: 'Socc Forgot Password Token Service',
+      html: `
+        <p>Socc Forgot Password Token</p>
+        <p>Password Reset OTP: ${data?.uniqcode} </p>
+        <p>Visit the Socc Official website: <a href="https://mailgen.js">Socc Official</a></p>
+      `,
+    };
+      transporter.sendMail(mailOptions)
+      .then(info => {
+        console.log('Email sent:', info.response);
+      })
+      .catch(error => {
+        console.error('Error sending email:', error.message);
+      });
+};
 
-
-  
 
