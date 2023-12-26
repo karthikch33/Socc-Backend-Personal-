@@ -169,7 +169,7 @@ export const deletesuperUserToken = asyncHandler(async(req,res)=>{
 
 export const resetpassword = asyncHandler(async(req,res)=>{
     const {password} = req.body
-    const {token} = req.params
+    const {uniqToken} = req.params
     try {
     const hashedToken = crypto.createHash('sha256').update(token).digest("hex")
     const user = await AdminRegister.findOne({
