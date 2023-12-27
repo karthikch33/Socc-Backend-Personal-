@@ -169,9 +169,12 @@ export const deletesuperUserToken = asyncHandler(async(req,res)=>{
 
 export const resetpassword = asyncHandler(async(req,res)=>{
     const {password} = req.body
+    console.log(req.body);
     const {uniqToken} = req.params
+    console.log(password);
+    console.log(uniqToken);
     try {
-    const hashedToken = crypto.createHash('sha256').update(token).digest("hex")
+    const hashedToken = crypto.createHash('sha256').update(uniqToken).digest("hex")
     const user = await AdminRegister.findOne({
         passwordResetToken:hashedToken.toString(),
         passwordResetExpires:{$gt:Date.now()}
@@ -181,7 +184,7 @@ export const resetpassword = asyncHandler(async(req,res)=>{
     user.passwordResetToken = undefined;
     user.passwordResetExpires = undefined;
     await user.save()
-    res.json(user)
+    res.json({user:user,status:201})
     } catch (error) {
         throw new Error(error)
     }
