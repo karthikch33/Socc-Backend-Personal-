@@ -27,9 +27,13 @@ export const registration = asyncHandler(async (req, res) => {
 
 export const getAllRegister = asyncHandler(async(req,res)=>{
   const {sessiontitle} = req.body
+  console.log(sessiontitle);
   try {
-    const registerData = await Sessions.find({sessiontitle:sessiontitle})
-    res.json(registerData)
+    const registerData = await SessionRegistration.find({EventReg:sessiontitle?.sessiontitle})
+    if (!registerData) {
+      return res.status(404).json({ message: 'Session not found' });
+  }
+  res.json(registerData);
   } catch (error) {
     throw new Error(error)
   }

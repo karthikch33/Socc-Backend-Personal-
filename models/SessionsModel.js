@@ -18,6 +18,24 @@ const sessionSchema = new mongoose.Schema({
     },
     images:{
         type:String
+    },
+    outcomes:{
+        type:String
+    },
+    silincrease:{
+        type:Number
+    },
+    sildecrease:{
+        type:Number
+    },
+    instructor:{
+        type:String
+    },
+    manager:{
+        type:String
+    },
+    strength:{
+        type:Number
     }
 })
 

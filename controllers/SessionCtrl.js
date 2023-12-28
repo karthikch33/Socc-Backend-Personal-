@@ -10,6 +10,7 @@ import crypto from 'crypto'
 
 export const registration = asyncHandler(async (req, res) => {
     try {
+        console.log(req.body);
         const newRegistration = await Sessions.create(req.body);
         res.status(201).json(newRegistration);
     } catch (error) {
