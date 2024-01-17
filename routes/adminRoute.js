@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { adminLogin, adminRegister, getAllSessions, getSessionById, registration, uploads,superUserTokenAuth, deletesuperUserToken, getsuperuserToken, forgotpassword, forgotpasswordverify, resetpassword } from "../controllers/SessionCtrl.js";
+import { adminLogin, adminRegister, getAllSessions, getSessionById, registration, uploads,superUserTokenAuth, deletesuperUserToken, getsuperuserToken, forgotpassword, forgotpasswordverify, resetpassword, getAllAdmins, addMessage, getMessage } from "../controllers/SessionCtrl.js";
 // import store from "../middleware/Multer.js";
 const router = Router()
 
@@ -14,6 +14,9 @@ router.route('/gettokenfromsuperuser').post(getsuperuserToken)
 router.route('/forgotpassword').post(forgotpassword)
 router.route('/forgotpasswordverify/:uniqToken').post(forgotpasswordverify)
 router.route('/resetpassword/:uniqToken').post(resetpassword)
+router.route('/getalladmins').get(getAllAdmins)
+router.route('/addmessage').post(addMessage)
+router.route('/getmessage').post(getMessage)
 // router.route('/uploadmultipleimages').post(store.array('images',12),uploads)
 
 export default router;

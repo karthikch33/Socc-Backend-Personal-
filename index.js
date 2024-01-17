@@ -8,6 +8,7 @@ import path from 'path'
 import router2 from './routes/adminRoute.js'
 import DBconnect from './Database/dbConnect.js'
 import hbs from 'express-handlebars'
+import cookieParser from 'cookie-parser'
 import { errorHandler, notFound } from './Config/ErrorHandler.js'
 
 
@@ -21,14 +22,15 @@ app.use(morgan('dev'))
 // app.set("view Engine","hbs")
 
 // app.engine('hbs',hbs({
-//     extname:'hbs',
-//     defaultView:'default',
-//     layoutsDir: path.join(__dirname,'views'),
-//     partialsDir:path.join(__dirname,'views/partials')
-// }))
-
-app.use('/api/auth',router1)
-app.use('/api/admin',router2)
+    //     extname:'hbs',
+    //     defaultView:'default',
+    //     layoutsDir: path.join(__dirname,'views'),
+    //     partialsDir:path.join(__dirname,'views/partials')
+    // }))
+    
+    app.use('/api/auth',router1)
+    app.use('/api/admin',router2)
+    app.use(cookieParser())
 
 app.use(notFound)
 app.use(errorHandler)

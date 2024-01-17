@@ -47,7 +47,19 @@ const RegisterSchema = new mongoose.Schema({
     oneTimeOTP:{
         type:Number,
         default:""
-    }
+    },
+    messages: [
+        {
+          userId: String,
+          chat: [
+            {
+              sender:String,
+              content:String,
+              timestamp: { type: Date, default: Date.now },
+            }
+          ],
+        }
+      ],
 },{timestamps:true})
 
 RegisterSchema.pre('save',async function(next){
