@@ -2,7 +2,6 @@ import express from 'express'
 import cors from 'cors'
 import morgan from 'morgan'
 import dotenv from 'dotenv/config'
-// import cookieParser from 'cookie-parser'
 import router1 from './routes/auth.js'
 import path from 'path'
 import router2 from './routes/adminRoute.js'
@@ -17,6 +16,7 @@ const PORT = process.env.PORT || 4036
 app.use(cors())
 app.use(express.json())
 app.use(morgan('dev'))
+app.use(cookieParser())
 
 // app.use(express.static(path.join(__dirname,"public")))
 // app.set("view Engine","hbs")
