@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-
+// Git Hub Url Updated
 const ContactSchema = new mongoose.Schema({
     collegeId:{
         type:String
