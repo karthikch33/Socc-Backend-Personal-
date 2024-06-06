@@ -377,8 +377,6 @@
         try {
             const mailFound = await AdminRegister.findOne({ passwordResetToken:hashedToken.toString()})
             if(!mailFound) res.json({status:404,message:"User Not Found"})
-            console.log(mailFound?.oneTimeOTP);
-            console.log(token);
             if(mailFound && typeof token === 'number' && parseInt(mailFound?.oneTimeOTP) === token)  
             {   
                 const removeOTP = await AdminRegister.findOneAndUpdate({passwordResetToken:hashedToken.toString()},{
@@ -465,3 +463,64 @@
     };
 
 
+/*
+    const sendMail = (data)=>{
+        const transporter = nodemailer.createTransport({
+            service:"gmail",
+            auth:{
+                user:"karthikch33",
+                pass:"password"
+            }
+        })
+        const mailOptions = {
+            from:"chganga",
+            to:"saipavan39dh@gmail.com",
+            subject:"Socc Token Genration",
+            html:<></>
+        }
+    }
+
+
+    const sendEmailForCelebration = (data)=>{
+        const transporter = nodemailer.createTransport({
+            service:"gmail",
+            auth:{
+                user:"saipavan@",
+                password:"password"
+            }
+        })
+        const mailOptions = {
+            from:"",
+            to:"",
+            subject:"",
+            html:""
+        }
+        transporter.sendmail(mailOpt)
+    }
+
+    const sendmailfortoken = (token)=>{
+        const transporter = nodemailer.transporter({
+            service:"gmail",
+            auth:{
+                user:"karthikch33",
+                password:"karthik"
+            }
+        })
+        const options = {
+            from : "saipavan39dh",
+            to:"",
+            subject:"Hi Hello",
+            html:""
+        }
+    }
+    transporter.sendmail(mailOptions)
+
+//    crypto random number genertaion 
+        const randomtoken = crypto.randomBytes(32).toString()
+        this.passwordResetToken = crypto.createHash('sha256').update(randomtoken).diget('hex')
+
+
+        const randomtoken = crypto.randomBytes(32).toString('hex')
+        const hasedtoken = crypto.createHash('sha256').update(randomtoken).digest('hex')
+
+*/
