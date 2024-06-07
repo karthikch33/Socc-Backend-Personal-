@@ -150,7 +150,6 @@
 
     export const addMessage = asyncHandler(async (req, res) => {
         const { username, message, oppositeUser } = req.body;
-        console.log("Came Here");
       
         try {
           if (username === oppositeUser) {
@@ -331,8 +330,6 @@
         const {password} = req.body
         console.log(req.body);
         const {uniqToken} = req.params
-        console.log(password);
-        console.log(uniqToken);
         try {
         const hashedToken = crypto.createHash('sha256').update(uniqToken).digest("hex")
         const user = await AdminRegister.findOne({

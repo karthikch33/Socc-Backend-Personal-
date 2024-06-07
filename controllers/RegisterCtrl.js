@@ -27,12 +27,11 @@ export const registration = asyncHandler(async (req, res) => {
 
 export const getAllRegister = asyncHandler(async(req,res)=>{
   const {sessiontitle} = req.body
-  console.log(sessiontitle);
   try {
     const registerData = await SessionRegistration.find({EventReg:sessiontitle?.sessiontitle})
     if (!registerData) {
       return res.status(404).json({ message: 'Session not found' });
-  }
+  } 
   res.json(registerData);
   } catch (error) {
     throw new Error(error)
@@ -128,7 +127,6 @@ export const getCompliants = asyncHandler(async (req, res) => {
 
 export const serveronoroff = asyncHandler(async(req,res)=>{
   try {
-    console.log('hi');
     res.json({status:201,message:'serverOn'})
   } catch (error) {
     res.json({status:404,message:'serverOff'})
@@ -242,7 +240,7 @@ export const sendEmailContactResolve = (data)=> {
       theme: 'default',
       product: {
         name: 'Socc Official',
-        link: 'https://mailgen.js',
+        link: 'https://socc.vercel.app',
       },
     });
   

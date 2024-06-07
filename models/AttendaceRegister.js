@@ -23,5 +23,59 @@ const AttendanceReg = new mongoose.Schema({
     }
 })
 
+
+
+/* 
+
+    const something =  new mongoose.Schema({
+        attendend:[
+            {
+                eventreg:{
+                    type:String
+                },
+                registerid:{
+                    type:String,
+                    default:"210000000"
+                },
+                registername:{
+                    type:String
+                }
+            }
+        ],
+        eventreg:{
+            type:String,
+            default:"Someting"
+        },
+        date:{
+            type:Date,
+            default:"January"
+        },
+        address:[
+            {
+                city:{
+                    type:String,
+                    default:"Hmdc"
+                },
+                street:{
+                    type:String,
+                    default:"hkd"
+                },
+                mandal:{
+                    type:String,
+                    default:"vmc"
+                },
+                houseno:{
+                    type:String
+                },
+                mobile:[
+                    {
+                        phone:Number
+                    }
+                ]
+            }
+        ]
+    })
+*/
+
 const Attendance = mongoose.model('attendance',AttendanceReg)
 export default Attendance
