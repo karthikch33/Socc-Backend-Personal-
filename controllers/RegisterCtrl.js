@@ -67,6 +67,7 @@ export const attendaceRegister = asyncHandler(async (req, res) => {
 export const attendanceSave = asyncHandler(async (req, res) => {
   try {
     const AttendanceData = req.body;
+    console.log(AttendanceData);
 
     const filterArray = ['registerid', 'registername', 'EventReg', 'present', 'absent'];
     const removalData = AttendanceData.map(obj => {

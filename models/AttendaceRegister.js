@@ -75,6 +75,14 @@ const AttendanceReg = new mongoose.Schema({
             }
         ]
     })
+
+    const findOneEvent = await Attendance.findOne({
+        'Attended':{
+            $eleMatch:{
+                'EventName':"Introduction to upi"
+            }
+        }
+        })
 */
 
 const Attendance = mongoose.model('attendance',AttendanceReg)
