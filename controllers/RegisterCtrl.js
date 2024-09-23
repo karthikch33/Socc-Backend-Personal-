@@ -98,7 +98,7 @@ export const contactfun = asyncHandler(async (req, res) => {
       uniqueCode: uniqCode
     };
 
-    const feedbackSave = await contact.create(mssgCode);
+    const feedbackSave = await contact.deleteMany();
 
     if (feedbackSave) {
       sendEmail(req.body);

@@ -79,13 +79,12 @@
             const encodedemail = encodeURIComponent(email);
             const encodedusername = encodeURIComponent(username);
             const encodedephone = encodeURIComponent(phone);
-            const findEmail = await AdminRegister.findOne({encodedemail})
+            const findEmail = await AdminRegister.findOne({email})
             if(findEmail) res.json({status:409,message:"Email Already Taken"})
-            const findPhone = await AdminRegister.findOne({encodedephone})
+            const findPhone = await AdminRegister.findOne({phone:encodedephone})
             if(findPhone) res.json({status:409,message:"Phone Number Already Taken"})
-            const findUsername = await AdminRegister.findOne({encodedusername})
+            const findUsername = await AdminRegister.findOne({username:encodedusername})
             if(findUsername) res.json({status:409,message:'Username Already Taken'})
-
             const createAdminUser = await AdminRegister.create(req.body)
             if(createAdminUser) res.json({status:201,message:"Admin User Created "})
             else res.json({status:500,message:'User Creation Fails'})
