@@ -10,16 +10,37 @@ import Sessions from "../models/SessionsModel.js";
 export const registration = asyncHandler(async (req, res) => {
   try {
     const { registerid, EventReg } = req.body;
+
+    const findFromAttendance = await AttendanceReg.findOne({
+      'Attended': {
+        $elemMatch: { 'EventReg': EventReg }
+      }
+    });
+
+    if(findFromAttendance !== null) throw new Error('Session Attendance Submitted')
+    
+    const findSession = await Sessions.findOne({sessiontitle:EventReg})
     const findRegisterd = await SessionRegistration.findOne({ registerid, EventReg });
 
-    if (!findRegisterd) {
+    if(findSession?.strength <= 0) throw new Error('Session Limit Exceeded')
+
+  
+    if (!findRegisterd && findSession?.strength > 0) {
       const newRegistration = await SessionRegistration.create(req.body);
-      // sendEmailReg(req.body)
+      const updateSessionStrength = await Sessions.findOneAndUpdate(
+        {
+          sessiontitle:EventReg
+        },
+        {$inc:{strength:-1}}
+      )
+      sendEmailReg(req.body)
       res.json(newRegistration);
     } else {
       throw new Error('Registration Completed For this Id');
     }
   } catch (error) {
+    console.log(error.message);
+    
     res.status(500).json({ status: 500, message: error.message });
   }
 });
@@ -67,7 +88,6 @@ export const attendaceRegister = asyncHandler(async (req, res) => {
 export const attendanceSave = asyncHandler(async (req, res) => {
   try {
     const AttendanceData = req.body;
-    console.log(AttendanceData);
 
     const filterArray = ['registerid', 'registername', 'EventReg', 'present', 'absent'];
     const removalData = AttendanceData.map(obj => {
@@ -83,29 +103,6 @@ export const attendanceSave = asyncHandler(async (req, res) => {
     });
 
     res.json({ attendanceResponse, status: 200 });
-  } catch (error) {
-    res.status(500).json({ status: 500, message: error.message });
-  }
-});
-
-
-export const contactfun = asyncHandler(async (req, res) => {
-  try {
-    const { message } = req.body;
-    const uniqCode = await sha256(message);
-    const mssgCode = {
-      ...req.body,
-      uniqueCode: uniqCode
-    };
-
-    const feedbackSave = await contact.deleteMany();
-
-    if (feedbackSave) {
-      sendEmail(req.body);
-      res.json({ message: 'FeedBack Submitted', success: true });
-    } else {
-      res.status(500).json({ message: 'FeedBack Failed', success: false });
-    }
   } catch (error) {
     res.status(500).json({ status: 500, message: error.message });
   }
@@ -144,10 +141,9 @@ export const getCompliantsResolved = asyncHandler(async (req, res) => {
       res.status(404).json({ status: 404, message: 'Complaints not found' });
     }
   } catch (error) {
-    res.status(500).json({ status: 500, message: error.message });
+    res.status(500).json({ status: 500, message: error?.message });
   }
 });
-
 
 
 export const resolvedContactMssg = asyncHandler(async (req, res) => {
@@ -192,7 +188,7 @@ export const sendEmail = (data)=> {
       theme: 'default',
       product: {
         name: 'Socc Official',
-        link: 'https://mailgen.js',
+        link: 'https://socc.vercel.app/',
       },
     });
   
@@ -294,7 +290,7 @@ export const sendEmailContactResolve = (data)=> {
       theme: 'default',
       product: {
         name: 'Socc Official',
-        link: 'https://mailgen.js',
+        link: 'https://socc.vercel.app/',
       },
     });
   

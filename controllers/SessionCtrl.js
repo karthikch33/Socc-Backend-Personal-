@@ -2,7 +2,6 @@
     import Sessions from '../models/SessionsModel.js'
     import nodemailer from 'nodemailer'
     import Feedback from '../models/FeedBack.js';
-    import Mailgen from "mailgen"
     import AdminRegister from '../models/Register.js';
     import { generateToken } from '../Config/Jwt_GenerateToken.js';
     import superUser from '../models/SuperUser.js';
@@ -22,7 +21,6 @@
     export const getAllSessions = asyncHandler(async (req, res) => {
         try {
             const allsessions = await Sessions.find();
-            console.log(req.cookies)
             res.json(allsessions);
         } catch (error) {
             res.status(500).json({ message: "Fetching Sessions Failed", error: error.message });
@@ -76,14 +74,11 @@
     export const adminRegister = asyncHandler(async (req,res)=>{
         const {username,email,phone} = req.body
         try {
-            const encodedemail = encodeURIComponent(email);
-            const encodedusername = encodeURIComponent(username);
-            const encodedephone = encodeURIComponent(phone);
             const findEmail = await AdminRegister.findOne({email})
             if(findEmail) res.json({status:409,message:"Email Already Taken"})
-            const findPhone = await AdminRegister.findOne({phone:encodedephone})
+            const findPhone = await AdminRegister.findOne({phone})
             if(findPhone) res.json({status:409,message:"Phone Number Already Taken"})
-            const findUsername = await AdminRegister.findOne({username:encodedusername})
+            const findUsername = await AdminRegister.findOne({username})
             if(findUsername) res.json({status:409,message:'Username Already Taken'})
             const createAdminUser = await AdminRegister.create(req.body)
             if(createAdminUser) res.json({status:201,message:"Admin User Created "})
@@ -106,7 +101,7 @@
                 res.json({ status: 305, message: "Admin User Not Found" });
             }
 
-            if (adminLogin && await adminLogin.isPasswordMatched(password)) {
+            if (adminLogin && await adminLogin.isPasswordMatched(password)){
                 const refreshToken = await generateToken(adminLogin?._id);
                 const updateAdminUser = await AdminRegister.findByIdAndUpdate(adminLogin?._id, {
                     refreshedToken: refreshToken
@@ -296,16 +291,26 @@
             const count = await superUser.countDocuments()
             let createSuperUserToken
             if (count >= 1) {
-                const deleteResult = await superUser.deleteMany({});
+                 await superUser.deleteMany({});
                 createSuperUserToken = await superUser.create({token:token}) 
             } else {
                 createSuperUserToken = await superUser.create({token:token}) 
             }
-            sendTokenViaEmail(token)
-            if(createSuperUserToken)
-            res.json(createSuperUserToken)
+
+            if(!createSuperUserToken?.token){
+                res.json({message:"Token Not Generated",status:409})
+            }
+
+            const confirm = await sendTokenViaEmail(token)
+          
+            if(createSuperUserToken && confirm?.status === 201){
+                res.json({token:createSuperUserToken,status:201,message:"Token Generated"})
+            }
+            else{
+                res.json({status:404, message:"Email Not Generated"})
+            }
         } catch (error) {
-            throw new Error(error)
+           res.json({status:409,message:"Token Not Generated"})
         }
     })
 
@@ -400,35 +405,41 @@
             res.json({'status':404})
             res.json({'status':344})
         } catch (error) {
-            throw new Error(error)
+            res.json({'status':344})
         }
     })
 
-    const sendTokenViaEmail = (token) => {
-        const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-            user: process.env.MAIL_ID,
-            pass: process.env.MAIL_PASSWORD,       
-        },
-        });
-        const mailOptions = {
-        from: 'your_gmail_account@gmail.com',   
-        to: 'saipavan39dh@gmail.com',
-        subject: 'Socc SuperUser Token Service',
-        html: `
-            <p>Socc Email Super User Token</p>
-            <p>Token For Access SuperUser: ${token}</p>
-            <p>Visit the Socc Official website: <a href="https://mailgen.js">Socc Official</a></p>
-        `,
-        };
-        transporter.sendMail(mailOptions)
-        .then(info => {
-            console.log('Email sent:', info.response);
-        })
-        .catch(error => {
-            console.error('Error sending email:', error.message);
-        });
+    const sendTokenViaEmail = async (token) => {
+        try {
+            const transporter = nodemailer.createTransport({
+                service: 'gmail',
+                auth: {
+                    user: process.env.MAIL_ID,
+                    pass: process.env.MAIL_PASSWORD,       
+                },
+                });
+                const mailOptions = {
+                from: 'your_gmail_account@gmail.com',   
+                to: 'saipavan39dh@gmail.com',
+                subject: 'Socc SuperUser Token Service',
+                html: `
+                    <p>Socc Email Super User Token</p>
+                    <p>Token For Access SuperUser: ${token}</p>
+                    <p>Visit the Socc Official website: <a href="https://mailgen.js">Socc Official</a></p>
+                `,
+                };
+                const info = await transporter.sendMail(mailOptions);
+                return {
+                    response: "Email sent: " + info.response,
+                    status:201
+                };
+        } catch (error) {
+            return  {
+                response: "Error sending email" + error,
+                status:404
+            }
+        }
+        
     };
 
     const sendPasswordResetToken = (data) => {

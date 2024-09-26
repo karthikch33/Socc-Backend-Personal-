@@ -19,10 +19,6 @@ const RegisterSchema = new mongoose.Schema({
         type:String,
         unique:true
     },
-    gender:{
-        type:String,
-        default:'male'
-    },
     phone:{
         type:String,
         unique:true
