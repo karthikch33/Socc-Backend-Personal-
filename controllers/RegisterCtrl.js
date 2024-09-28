@@ -9,7 +9,7 @@ import Sessions from "../models/SessionsModel.js";
 
 export const registration = asyncHandler(async (req, res) => {
   try {
-    const { registerid, EventReg } = req.body;
+    const { registerid, EventReg } = req.body;    
 
     const findFromAttendance = await AttendanceReg.findOne({
       'Attended': {
@@ -19,29 +19,48 @@ export const registration = asyncHandler(async (req, res) => {
 
     if(findFromAttendance !== null) throw new Error('Session Attendance Submitted')
     
+    
     const findSession = await Sessions.findOne({sessiontitle:EventReg})
     const findRegisterd = await SessionRegistration.findOne({ registerid, EventReg });
 
-    if(findSession?.strength <= 0) throw new Error('Session Limit Exceeded')
-
+    if(findSession?.strength <= 0) throw new Error('Session Limit Exceeded')      
   
     if (!findRegisterd && findSession?.strength > 0) {
-      const newRegistration = await SessionRegistration.create(req.body);
-      const updateSessionStrength = await Sessions.findOneAndUpdate(
-        {
-          sessiontitle:EventReg
-        },
-        {$inc:{strength:-1}}
-      )
-      sendEmailReg(req.body)
-      res.json(newRegistration);
+
+      const newRegistration = await SessionRegistration.create(req.body);      
+      const confirm = await sendEmailReg(req.body)
+
+      if(newRegistration && confirm?.status === 201){
+        const updateSessionStrength = await Sessions.findOneAndUpdate(
+          {
+            sessiontitle:EventReg
+          },
+          {$inc:{strength:-1}}
+        )
+        res.json({status:201,message:"Registration Successfull and mail Generated"})
+      }
+      else{
+        if(newRegistration){
+        const updateSessionStrength = await Sessions.findOneAndUpdate(
+          {
+            sessiontitle:EventReg
+          },
+          {$inc:{strength:-1}}
+        )
+           res.json({message:"Registration Successfull, Error in mail Generation",status:301})
+      }
+        else{
+          res.json({message:'Unexpected Error', status: 404,
+                      success:false})
+          }
+      }
     } else {
-      throw new Error('Registration Completed For this Id');
+      res.json({message:'Registration Completed For this Id', status: 404,
+        success:false})
     }
-  } catch (error) {
-    console.log(error.message);
-    
-    res.status(500).json({ status: 500, message: error.message });
+  } catch (error) {    
+    res.json({message:error?.message || "Unexpected Error", status: 404,
+      success:false})
   }
 });
 
@@ -274,60 +293,68 @@ export const sendEmailContactResolve = (data)=> {
       });
   };
 
-  export const sendEmailReg = (data)=> {
-    let config = {
-      service: 'gmail',
-      auth: {
-        user: process.env.MAIL_ID,
-        pass: process.env.MAIL_PASSWORD, 
-      },
-    };
+  export const  sendEmailReg = async (data)=> {
+    try {
+      let config = {
+        service: 'gmail',
+        auth: {
+          user: process.env.MAIL_ID,
+          pass: process.env.MAIL_PASSWORD, 
+        },
+      };
+    
+      let transporter = nodemailer.createTransport(config);
   
-    let transporter = nodemailer.createTransport(config);
-
-  
-    let MailGenerator = new Mailgen({
-      theme: 'default',
-      product: {
-        name: 'Socc Official',
-        link: 'https://socc.vercel.app/',
-      },
-    });
-  
-    let response = {
-      body: {
-        name: data?.registerid,
-        intro: 'Session Registration',
-        outro: `You are receiving this mail just to inform you about your recent Session Registration for ${data?.EventReg}
-        <br/>
-        <br/>
-        Date: ${data?.date}
-        <br/>
-        Timing: ${data?.startAt}
-        <br/>
-        Venue: ${data?.venue}
-        <br/>
-        Current Date: ${new Date()}
-        <br/>
-        `,
-      },    
-    };
-  
-    let mail = MailGenerator.generate(response);
-  
-    let message = {
-      from: process.env.MAIL_ID,
-      to: `${data?.registerid+"@kluniversity.in"}`,
-      subject: 'Session Registration', 
-      html: mail,
-    };
-  
-    transporter.sendMail(message)
-      .then(() => {
-       console.log('You Should Recieve An Email');
-      })
-      .catch((error) => {
-        console.log(error);
+    
+      let MailGenerator = new Mailgen({
+        theme: 'default',
+        product: {
+          name: 'Socc Official',
+          link: 'https://socc.vercel.app/',
+        },
       });
+    
+      let response = {
+        body: {
+          name: data?.registerid,
+          intro: 'Session Registration',
+          outro: `You are receiving this mail just to inform you about your recent Session Registration for ${data?.EventReg}
+          <br/>
+          <br/>
+          Date: ${data?.date}
+          <br/>
+          Timing: ${data?.startAt}
+          <br/>
+          Venue: ${data?.venue}
+          <br/>
+          Current Date: ${new Date()}
+          <br/>
+          `,
+        },    
+      };
+    
+      let mail = MailGenerator.generate(response);
+    
+      let message = {
+        from: process.env.MAIL_ID,
+        to: `${data?.registerid+"@kluniversity.in"}`,
+        subject: 'Session Registration', 
+        html: mail,
+      };
+
+      const info = await transporter.sendMail(message)
+      console.log(info.response);
+    
+      return {
+      response: "Email Sent" + info.response,
+      status:201
+    }
+    
+  } catch (error) {
+    return  {
+      response: "Error sending email" + error,
+      status:404
+  }
+  }    
   };
 
